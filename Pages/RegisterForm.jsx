@@ -1,45 +1,32 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
-const AuthPage = () => {
-  const navigation = useNavigation();
-
+const RegisterForm = () => {
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleLogin = async () => {
-    try {
-      const response = await fetch('http://localhost:3001/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
+  const navigation = useNavigation();
 
-      if (response.ok) {
-        const body = await response.json();
-        await AsyncStorage.setItem('token', body.token);
-        const userId = body._id;
-        navigation.navigate('MyProfile', { userId });
-      } else {
-        Alert.alert('Login failed', 'Please check your credentials');
-      }
-    } catch (error) {
-      console.error(error);
-      Alert.alert('Error', 'An error occurred. Please try again later.');
-    }
+  const handleRegister = () => {
+    console.log({ username, email, password });
+    alert('Registro exitoso!');
   };
 
-  const handleFormSwitch = () => {
-    navigation.navigate('Register');
+  const handleGoToLogin = () => {
+    navigation.navigate('AuthPage');
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>GramVibe</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Nombre de usuario"
+        value={username}
+        onChangeText={setUsername}
+      />
       <TextInput
         style={styles.input}
         placeholder="Correo electrónico"
@@ -54,11 +41,11 @@ const AuthPage = () => {
         secureTextEntry
         onChangeText={setPassword}
       />
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Iniciar Sesión</Text>
+      <TouchableOpacity style={styles.button} onPress={handleRegister}>
+        <Text style={styles.buttonText}>Registrarse</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.switchButton} onPress={handleFormSwitch}>
-        <Text style={styles.switchText}>¿No tienes cuenta? Registrate aquí</Text>
+      <TouchableOpacity onPress={handleGoToLogin} style={styles.link}>
+        <Text style={styles.linkText}>¿Ya tienes cuenta? Inicia sesión aquí</Text>
       </TouchableOpacity>
     </View>
   );
@@ -93,21 +80,20 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     width: '100%',
     alignItems: 'center',
-    marginBottom: 10,
   },
   buttonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
   },
-  switchButton: {
+  link: {
     marginTop: 20,
   },
-  switchText: {
+  linkText: {
     color: '#6200ee',
     fontSize: 16,
     fontWeight: 'bold',
   },
 });
 
-export default AuthPage;
+export default RegisterForm;
