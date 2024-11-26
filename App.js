@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import AuthPage from './Pages/LoginForm.jsx';
 import HomePage from './Pages/Home.jsx';
 import RegisterForm from './Pages/RegisterForm.jsx';
+import MyProfile from './Pages/MyProfile.jsx';
 
 const Stack = createNativeStackNavigator();
 
@@ -23,10 +24,16 @@ const App = () => {
           component={HomePage} 
           options={{ title: 'Home', headerShown: false }} 
         />
-        
+
         <Stack.Screen 
           name="Register" 
           component={RegisterForm} 
+          options={{ title: 'Home', headerShown: false }} 
+        />
+
+        <Stack.Screen 
+          name="MyProfile" 
+          component={MyProfile} 
           options={{ title: 'Home', headerShown: false }} 
         />
       </Stack.Navigator>
