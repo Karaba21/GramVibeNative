@@ -17,13 +17,13 @@ const App = () => {
           options={{ title: 'Auth', headerShown: false }} 
         />
         
-        {/* Pantalla Home 
+      
         <Stack.Screen 
           name="HomePage" 
           component={HomePage} 
           options={{ title: 'Home', headerShown: false }} 
         />
-        */}
+        
         <Stack.Screen 
           name="Register" 
           component={RegisterForm} 
