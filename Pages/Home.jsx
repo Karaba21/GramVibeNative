@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 
 const posts = [
   {
@@ -25,6 +26,7 @@ const posts = [
 ];
 
 export default function HomePage() {
+  const navigation = useNavigation();
   const renderPost = ({ item }) => (
     <View style={styles.postContainer}>
       {/* Encabezado de la publicación */}
@@ -87,7 +89,7 @@ export default function HomePage() {
         <TouchableOpacity>
           <Ionicons name="home" size={28} color="#333" />
         </TouchableOpacity>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate("MyProfile")}>
           <Ionicons name="person-circle-outline" size={28} color="#333" />
         </TouchableOpacity>
       </View>
