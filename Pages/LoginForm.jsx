@@ -22,6 +22,7 @@ const AuthPage = () => {
       if (response.ok) {
         const body = await response.json();
         await AsyncStorage.setItem('token', body.token);
+        await AsyncStorage.setItem('userId', body._id);
         const userId = body._id;
         navigation.navigate('HomePage', { userId });
       } else {

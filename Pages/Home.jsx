@@ -1,44 +1,30 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity } from "react-native";
+import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity, Alert, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import PostComponent from "./PostComponent";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImagePicker from 'expo-image-picker';
 
 import { useNavigation } from "@react-navigation/native";
 
-
-const posts = [
-  {
-    id: "1",
-    username: "FriendName",
-    profileImage: "https://via.placeholder.com/50",
-    postImage: "https://via.placeholder.com/300",
-    likes: 33,
-    description: "This is my friend's post description...",
-    time: "hace 2 hrs",
-  },
-  {
-    id: "2",
-    username: "FriendName",
-    profileImage: "https://via.placeholder.com/50",
-    postImage: "https://via.placeholder.com/300",
-    likes: 33,
-    description: "This is my friend's post description...",
-    time: "hace 2 hrs",
-  }
-  
-];
 
 export default function HomePage() {
   const [posts, setPosts] = useState([]);
 
   const [friends, setFriends] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [token, setToken] = useState('');
+  const [caption, setCaption] = useState('');
+  const [showCaptionInput, setShowCaptionInput] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(false);
+  const navigation = useNavigation();
+
 
   useEffect(() => {
     const fetchPostsAndFriends = async () => {
       try {
         const token = await AsyncStorage.getItem('token');
+        setToken(token);
         
         // Fetch de publicaciones
         const postsResponse = await fetch('http://172.20.10.12:3001/api/posts/feed', {
@@ -72,6 +58,58 @@ export default function HomePage() {
     fetchPostsAndFriends();
   }, []);
 
+  const handleAddPhoto = async () => {
+    
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+      });
+
+      if (!result.canceled) {
+        setShowCaptionInput(true);
+        const formData = new FormData();
+        formData.append('image', {
+          uri: result.assets[0].uri,
+          type: 'image/jpeg',
+          name: 'photo.jpg',
+        });
+        formData.append('caption', caption);
+
+        const token = await AsyncStorage.getItem('token');
+        const response = await fetch('http://172.20.10.12:3001/api/posts/upload', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        });
+
+        if (response.ok) {
+          Alert.alert('Success', 'Photo uploaded successfully!');
+          setCaption('');
+          setShowCaptionInput(false);
+          // Refresh posts
+          const updatedPostsResponse = await fetch('http://172.20.10.12:3001/api/posts/feed', {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          const updatedPostsData = await updatedPostsResponse.json();
+          setPosts(updatedPostsData);
+        } else {
+          console.error('Error al subir la foto:', response.status);
+        }
+      }
+    } catch (error) {
+      console.error('Error al seleccionar o subir la foto:', error);
+    }
+  };
+
+
   if (loading) {
     return (
       <View style={styles.container}>
@@ -80,64 +118,11 @@ export default function HomePage() {
     );
   }
 
-/* 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const token = await AsyncStorage.getItem('token');
-        const response = await fetch('http://172.20.10.12:3001/api/posts/feed', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const data = await response.json();
-        if (response.ok) {
-          setPosts(data);
-        } else {
-          console.error('Error al cargar las publicaciones:', data.message);
-        }
-      } catch (error) {
-        console.error('Error en la conexión:', error);
-      }
-    };
+  const getUserDetails = (userId) => {
+    const user = friends.find(friend => friend._id === userId);
+    return user ? user : { username: 'Unknown', profilePicture: '' };
+  };
 
-    fetchPosts();
-  }, []);
- */
-
-
-/*   const renderPost = ({ item }) => (
-    <View style={styles.postContainer}>
-      <View style={styles.postHeader}>
-        <Image source={{ uri: item.profileImage }} style={styles.profileImage} />
-        <Text style={styles.username}>{item.username}</Text>
-        <TouchableOpacity style={styles.moreOptions}>
-          <Ionicons name="ellipsis-horizontal" size={20} color="#333" />
-        </TouchableOpacity>
-      </View>
-
-      <Image source={{ uri: item.postImage }} style={styles.postImage} />
-
-      <View style={styles.actions}>
-        <TouchableOpacity>
-          <Ionicons name="heart-outline" size={24} color="#333" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.commentIcon}>
-          <Ionicons name="chatbubble-outline" size={24} color="#333" />
-        </TouchableOpacity>
-      </View>
-
-      <Text style={styles.likes}>{item.likes} Likes</Text>
-      <Text style={styles.description}>
-        <Text style={styles.username}>{item.username} </Text>
-        {item.description}
-      </Text>
-      <Text style={styles.time}>{item.time}</Text>
-    </View>
-  );
- */
-  
-  
   return (
     <View style={styles.container}>
       {/* Encabezado principal */}
@@ -147,23 +132,34 @@ export default function HomePage() {
           <TouchableOpacity>
             <Ionicons name="heart-outline" size={24} color="#333" />
           </TouchableOpacity>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={handleAddPhoto}>
             <Ionicons name="add-circle-outline" size={24} color="#333" />
           </TouchableOpacity>
         </View>
       </View>
 
+        {/* Input de caption para la foto (visible solo antes de subir la foto) */}
+        {showCaptionInput && (
+        <View style={styles.captionInputContainer}>
+          <TextInput
+            style={styles.captionInput}
+            placeholder="Add a caption..."
+            value={caption}
+            onChangeText={setCaption}
+          />
+        </View>
+      )}
+
       {/* Lista del feed */}
-{/*       <FlatList
-        data={posts}
-        renderItem={renderPost}
-        keyExtractor={(item) => item.id}
-        showsVerticalScrollIndicator={false}
-      /> */}
 
       <FlatList
         data={posts}
-        renderItem={({ item }) => <PostComponent item={item} />} // Usa el componente PostComponent
+        //renderItem={({ item }) => <PostComponent item={item} token={token} />} // Pasa el token a PostComponent
+        // renderItem={({ item }) => <PostComponent item={item} />} // Usa el componente PostComponent
+        renderItem={({ item }) => {
+          const userDetails = getUserDetails(item.user._id);
+          return <PostComponent item={{ ...item, user: userDetails }} token={token} />;
+        }}
         keyExtractor={(item) => item._id}
         showsVerticalScrollIndicator={false}
       />
@@ -264,5 +260,15 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#ddd",
     padding: 10,
+    paddingTop: 15,
+    paddingBottom: 30,
   },
+  captionInput: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    padding: 10,
+    backgroundColor: "#fff",
+  },
+
 });
