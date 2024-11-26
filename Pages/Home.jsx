@@ -1,6 +1,10 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import PostComponent from "./PostComponent";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+
 
 const posts = [
   {
@@ -25,9 +29,84 @@ const posts = [
 ];
 
 export default function HomePage() {
-  const renderPost = ({ item }) => (
+  const [posts, setPosts] = useState([]);
+
+  const [friends, setFriends] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPostsAndFriends = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        
+        // Fetch de publicaciones
+        const postsResponse = await fetch('http://172.20.10.12:3001/api/posts/feed', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const postsData = await postsResponse.json();
+        
+        // Fetch de amigos
+        const friendsResponse = await fetch('http://172.20.10.12:3001/api/user/all', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const friendsData = await friendsResponse.json();
+        
+        if (postsResponse.ok && friendsResponse.ok) {
+          setPosts(postsData);
+          setFriends(friendsData);
+        } else {
+          console.error('Error al cargar las publicaciones o amigos');
+        }
+      } catch (error) {
+        console.error('Error en la conexión:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPostsAndFriends();
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <Text>Cargando...</Text>
+      </View>
+    );
+  }
+
+/* 
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        const response = await fetch('http://172.20.10.12:3001/api/posts/feed', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const data = await response.json();
+        if (response.ok) {
+          setPosts(data);
+        } else {
+          console.error('Error al cargar las publicaciones:', data.message);
+        }
+      } catch (error) {
+        console.error('Error en la conexión:', error);
+      }
+    };
+
+    fetchPosts();
+  }, []);
+ */
+
+
+/*   const renderPost = ({ item }) => (
     <View style={styles.postContainer}>
-      {/* Encabezado de la publicación */}
       <View style={styles.postHeader}>
         <Image source={{ uri: item.profileImage }} style={styles.profileImage} />
         <Text style={styles.username}>{item.username}</Text>
@@ -36,10 +115,8 @@ export default function HomePage() {
         </TouchableOpacity>
       </View>
 
-      {/* Imagen de la publicación */}
       <Image source={{ uri: item.postImage }} style={styles.postImage} />
 
-      {/* Acciones */}
       <View style={styles.actions}>
         <TouchableOpacity>
           <Ionicons name="heart-outline" size={24} color="#333" />
@@ -49,7 +126,6 @@ export default function HomePage() {
         </TouchableOpacity>
       </View>
 
-      {/* Información del post */}
       <Text style={styles.likes}>{item.likes} Likes</Text>
       <Text style={styles.description}>
         <Text style={styles.username}>{item.username} </Text>
@@ -58,7 +134,9 @@ export default function HomePage() {
       <Text style={styles.time}>{item.time}</Text>
     </View>
   );
-
+ */
+  
+  
   return (
     <View style={styles.container}>
       {/* Encabezado principal */}
@@ -75,10 +153,17 @@ export default function HomePage() {
       </View>
 
       {/* Lista del feed */}
-      <FlatList
+{/*       <FlatList
         data={posts}
         renderItem={renderPost}
         keyExtractor={(item) => item.id}
+        showsVerticalScrollIndicator={false}
+      /> */}
+
+      <FlatList
+        data={posts}
+        renderItem={({ item }) => <PostComponent item={item} />} // Usa el componente PostComponent
+        keyExtractor={(item) => item._id}
         showsVerticalScrollIndicator={false}
       />
 
