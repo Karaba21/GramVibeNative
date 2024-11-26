@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import PostComponent from "./PostComponent";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { useNavigation } from "@react-navigation/native";
 
 
 const posts = [
@@ -172,7 +173,7 @@ export default function HomePage() {
         <TouchableOpacity>
           <Ionicons name="home" size={28} color="#333" />
         </TouchableOpacity>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate("MyProfile")}>
           <Ionicons name="person-circle-outline" size={28} color="#333" />
         </TouchableOpacity>
       </View>
