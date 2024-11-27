@@ -162,13 +162,15 @@ const MyProfile = () => {
       </ScrollView>
 
       {/* Barra de navegación */}
-      <View style={styles.navBar}>
-        <TouchableOpacity onPress={() => navigation.navigate("HomePage")}>
-          <Ionicons name="home" size={28} color="#333" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate("MyProfile")}>
-          <Ionicons name="person-circle-outline" size={28} color="#333" />
-        </TouchableOpacity>
+      <View style={styles.navBarContainer}>
+        <View style={styles.navBar}>
+          <TouchableOpacity onPress={() => navigation.navigate("HomePage")}>
+            <Ionicons name="home" size={28} color="#333" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate("MyProfile")}>
+            <Ionicons name="person-circle-outline" size={28} color="#333" />
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -249,6 +251,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
     //marginBottom: 140,
     maxHeight: 400,
+    //marginBottom: 50,
   },
   postImage: {
     //width: '30%',
@@ -270,8 +273,16 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     //marginBottom: 40,
-    paddingBottom: 20,
+    //paddingBottom: 20,
+    height: '58%',
 
+  },
+  navBarContainer: {
+    position: "absolute",
+    bottom: 0,
+    width: "100%",
+    borderTopWidth: 1,
+    borderTopColor: "#ddd",
   },
 });
 

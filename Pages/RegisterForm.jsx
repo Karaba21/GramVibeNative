@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
 const RegisterForm = () => {
@@ -9,9 +9,26 @@ const RegisterForm = () => {
 
   const navigation = useNavigation();
 
-  const handleRegister = () => {
-    console.log({ username, email, password });
-    alert('Registro exitoso!');
+  const handleRegister = async () => {
+    try {
+      const response = await fetch('http://172.20.10.12:3001/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, email, password }),
+      });
+
+      if (response.ok) {
+        Alert.alert('Registro exitoso', 'Usuario registrado correctamente');
+        navigation.navigate('AuthPage');
+      } else {
+        Alert.alert('Error', 'No se pudo registrar el usuario. Verifique los datos e intente nuevamente.');
+      }
+    } catch (error) {
+      console.error('Error al registrar el usuario:', error);
+      Alert.alert('Error', 'Hubo un problema al conectar con el servidor.');
+    }
   };
 
   const handleGoToLogin = () => {

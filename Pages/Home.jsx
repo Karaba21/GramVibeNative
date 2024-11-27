@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity, Alert, TextInput } from "react-native";
+import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity, Alert, TextInput, Modal } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import PostComponent from "./PostComponent";
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -19,6 +19,10 @@ export default function HomePage() {
   const [selectedImage, setSelectedImage] = useState(false);
   const navigation = useNavigation();
 
+  const [modalVisible, setModalVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [users, setUsers] = useState([]);
+
 
   useEffect(() => {
     const fetchPostsAndFriends = async () => {
@@ -26,7 +30,6 @@ export default function HomePage() {
         const token = await AsyncStorage.getItem('token');
         setToken(token);
         
-        // Fetch de publicaciones
         const postsResponse = await fetch('http://172.20.10.12:3001/api/posts/feed', {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -34,7 +37,6 @@ export default function HomePage() {
         });
         const postsData = await postsResponse.json();
         
-        // Fetch de amigos
         const friendsResponse = await fetch('http://172.20.10.12:3001/api/user/all', {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -92,7 +94,6 @@ export default function HomePage() {
           Alert.alert('Success', 'Photo uploaded successfully!');
           setCaption('');
           setShowCaptionInput(false);
-          // Refresh posts
           const updatedPostsResponse = await fetch('http://172.20.10.12:3001/api/posts/feed', {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -109,6 +110,27 @@ export default function HomePage() {
     }
   };
 
+
+  const handleSearchUsers = async () => {
+    try {
+      const response = await fetch('http://172.20.10.12:3001/api/user/all', {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data);
+      } else {
+        Alert.alert('Error', 'No se pudieron obtener los usuarios.');
+      }
+    } catch (error) {
+      console.error('Error al buscar usuarios:', error);
+      Alert.alert('Error', 'Hubo un problema al conectar con el servidor.');
+    }
+  };
 
   if (loading) {
     return (
@@ -129,6 +151,9 @@ export default function HomePage() {
       <View style={styles.header}>
         <Text style={styles.title}>GramVibe</Text>
         <View style={styles.headerIcons}>
+        <TouchableOpacity onPress={() => { setModalVisible(true); handleSearchUsers(); }}>
+            <Ionicons name="search-outline" size={24} color="#333" />
+          </TouchableOpacity>
           <TouchableOpacity>
             <Ionicons name="heart-outline" size={24} color="#333" />
           </TouchableOpacity>
@@ -138,7 +163,7 @@ export default function HomePage() {
         </View>
       </View>
 
-        {/* Input de caption para la foto (visible solo antes de subir la foto) */}
+        {/* Input de caption para la foto (visible solo antes de subir la foto) no funca  */}
         {showCaptionInput && (
         <View style={styles.captionInputContainer}>
           <TextInput
@@ -173,6 +198,44 @@ export default function HomePage() {
           <Ionicons name="person-circle-outline" size={28} color="#333" />
         </TouchableOpacity>
       </View>
+
+      {/* Modal de búsqueda de usuarios */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => {
+          setModalVisible(!modalVisible);
+        }}
+      >
+        <View style={styles.modalView}>
+          <Text style={styles.modalTitle}>Buscar Usuarios</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Buscar..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          <FlatList
+            data={users.filter(user => user.username.includes(searchQuery))}
+            keyExtractor={(item) => item._id}
+            renderItem={({ item }) => (
+              <TouchableOpacity onPress={() => { setModalVisible(false); navigation.navigate('UserProfile', { userId: item._id }); }}>
+                <Text style={styles.userItem}>{item.username}</Text>
+              </TouchableOpacity>
+            )}
+          />
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => setModalVisible(!modalVisible)}
+          >
+            <Text style={styles.buttonText}>Cerrar</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
+
+
+
     </View>
   );
 }
@@ -270,5 +333,32 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: "#fff",
   },
+
+  modalView: {
+    flex: 1,
+    backgroundColor: "#fff",
+    padding: 20,
+    marginTop: 50,
+    borderRadius: 8,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 15,
+  },
+  userItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#ccc",
+  },
+  closeButton: {
+    backgroundColor: "#6200ee",
+    padding: 15,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 20,
+  },
+
+
 
 });

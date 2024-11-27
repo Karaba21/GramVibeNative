@@ -5,6 +5,7 @@ import AuthPage from './Pages/LoginForm.jsx';
 import HomePage from './Pages/Home.jsx';
 import RegisterForm from './Pages/RegisterForm.jsx';
 import MyProfile from './Pages/MyProfile.jsx';
+import UserProfile from './Pages/UserProfile.jsx';
 
 const Stack = createNativeStackNavigator();
 
@@ -35,6 +36,11 @@ const App = () => {
           name="MyProfile" 
           component={MyProfile} 
           options={{ title: 'Home', headerShown: false }} 
+        />
+        <Stack.Screen
+          name="UserProfile"
+          component={UserProfile}
+          options={{ title: 'My Profile', headerShown: false }}
         />
       </Stack.Navigator>
     </NavigationContainer>
